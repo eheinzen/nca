@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.o
+*.so
+*.dll
+inst/doc
+renv
+renv.lock
+.Renviron
+.Rprofile
