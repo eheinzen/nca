@@ -6,7 +6,8 @@ supporting both classification and regression problems.
 Based on the [original paper](http://www.cs.nyu.edu/~roweis/papers/ncanips.pdf),
 but modified in a few ways:
 
-1. The gradient computation is vectorized, as in Python's implementation in `sklearn`.
+1. The gradient computation is vectorized, as in Python's implementation in
+   [`sklearn`](https://github.com/scikit-learn/scikit-learn).
    The derivation is provided in one of the vignettes.
 
 1. The problem is set up as a minimizing loss problem, instead of the original
