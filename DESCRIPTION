@@ -1,0 +1,20 @@
+Package: nca
+Version: 0.1.0
+Title: Neighborhood Component Analysis
+Date: 2023-09-29
+Authors@R: c(
+    person("Ethan", "Heinzen", email = "heinzen.ethan@mayo.edu", role = c("aut", "cre"))
+  )
+Description: An R implementation of the Neighborhood Components Analysis,
+  supporting both classification and regression problems.
+Depends:
+    R (>= 4.2.0),
+    stats
+VignetteBuilder: knitr
+License: GPL (>= 2)
+URL: https://github.com/eheinzen/nca, https://eheinzen.github.io/nca/
+BugReports: https://github.com/eheinzen/nca/issues
+RoxygenNote: 7.2.3
+LazyData: true
+LinkingTo: Rcpp
+Encoding: UTF-8
