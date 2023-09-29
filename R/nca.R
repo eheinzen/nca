@@ -60,7 +60,7 @@ nca <- function(formula, data, subset, na.action, ...) {
 
   if(attr(Terms, "response") != 1) stop("You must provide a left-hand side to the formula")
   y <- mf[[1]]
-  X <- model.matrix(Terms, data = mf, ...)
+  X <- stats::model.matrix(Terms, data = mf, ...)
 
   out <- nca.fit(y = y, X = X, ...)
   out$terms <- Terms
@@ -107,7 +107,7 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
 
   init <- match.arg(init)
   if(init == "pca") {
-    X.pca <- prcomp(X)
+    X.pca <- stats::prcomp(X)
     A.init <- t(X.pca$rotation[, paste0("PC", seq_len(n_components)), drop = FALSE])
   } else if(init == "identity") {
     A.init <- matrix(0, nrow = n_components, ncol = k)
@@ -135,7 +135,7 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     (2/N)*AX %*% W2 %*% X + 2*lambda*A
   }
 
-  out <- optim(
+  out <- stats::optim(
     par = A.init,
     fn = calculate_objective,
     gr = calculate_gradient,
