@@ -1,5 +1,13 @@
 data(iris)
 
+test_that("matrix and formula interfaces give the same answer", {
+  y <- iris$Species
+  X <- as.matrix(iris[names(iris) != "Species"])
+  nca.iris <- nca.fit(y = y, X = X, n_components = 1)
+  nca.iris3 <- nca(Species ~ ., data = iris, n_components = 1)
+  expect_equal(nca.iris$coefficients, nca.iris3$coefficients)
+})
+
 test_that("two neighborhoods work", {
   y <- iris$Species
   X <- as.matrix(iris[names(iris) != "Species"])
@@ -8,6 +16,18 @@ test_that("two neighborhoods work", {
                        neighborhood = rep(0:1, each = nrow(iris)))
 
   expect_equal(nca.iris$coefficients, nca.iris2$coefficients, tolerance = 1e-6)
+
+  nca.iris3 <- nca(Species ~ ., data = rbind(iris, iris), n_components = 1, neighborhood = rep(0:1, each = nrow(iris)))
+  expect_error(predict(nca.iris2, newdata = X), "Please specify which neighborhood")
+  expect_error(predict(nca.iris3, newdata = iris), "Please specify which neighborhood")
+
+  expect_error(predict(nca.iris3, newdata = iris, neighborhood = rep.int(2, nrow(iris))), "Detected new neighborhoods")
+
+  pred <- predict(nca.iris3, newdata = iris, neighborhood = rep.int(0, nrow(iris)))
+  expect_identical(dim(pred), c(nrow(iris), 3L))
+
+  pred <- predict(nca.iris2, newdata = X, neighborhood = rep.int(0, nrow(iris)))
+  expect_identical(dim(pred), c(nrow(iris), 3L))
 })
 
 
@@ -22,10 +42,11 @@ test_that("prediction works for data.frame", {
 
   d <- data.frame(Sepal.Width = 3.5, Petal.Length = 1.4, Petal.Width = 0.2)
   expect_error(predict(nca.iris, newdata = d), "'Species' not found")
-  d$Species <- "Not a species"
+  lvls <- sort(unique(iris$Species))
+  d$Species <- factor("Not a species", levels = c("Not a species", lvls))
   expect_error(predict(nca.iris, newdata = d), "factor Species has new level Not a species")
 
-  d$Species <- "setosa"
+  d$Species <- factor("setosa", levels = lvls)
   d$Sepal.Width <- "1"
   expect_error(predict(nca.iris, newdata = d), "variable 'Sepal.Width' was fitted with type \"numeric\" but type \"character\" was supplied")
 })

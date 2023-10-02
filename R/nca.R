@@ -54,14 +54,14 @@ NULL
 
 #' @rdname nca
 #' @export
-nca <- function(formula, data, subset, na.action, ...) {
+nca <- function(formula, data, neighborhood, subset, na.action, ...) {
   Call <- match.call()
-  idx <- match(c("formula", "data", "subset", "na.action"), names(Call), nomatch = 0)
+  idx <- match(c("formula", "data", "neighborhood", "subset", "na.action"), names(Call), nomatch = 0)
   if(idx[1] == 0) stop("A formula argument is required")
-  temp.call <- Call[c(1, idx)]
-  temp.call[[1L]] <- quote(stats::model.frame)
-  temp.call$drop.unused.levels <- TRUE
-  mf <- eval(temp.call, parent.frame())
+  tmp.call <- Call[c(1, idx)]
+  tmp.call[[1L]] <- quote(stats::model.frame)
+  tmp.call$drop.unused.levels <- TRUE
+  mf <- eval(tmp.call, parent.frame())
   if(nrow(mf) == 0) stop("No (non-missing) observations")
   Terms <- stats::terms(mf)
   attr(Terms, "intercept") <- FALSE
@@ -71,7 +71,7 @@ nca <- function(formula, data, subset, na.action, ...) {
   y <- mf[[1]]
   X <- stats::model.matrix(Terms, data = mf, ...)
 
-  out <- nca.fit(y = y, X = X, ...)
+  out <- nca.fit(y = y, X = X, neighborhood = mf[["(neighborhood)"]], ...)
   out$terms <- Terms
   out$na.action <- stats::na.action(mf)
   out$contrasts <- attr(X, "contrasts")
@@ -143,7 +143,6 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
   }
 
   Xsplit <- split.data.frame(X, f = neighborhood, drop = TRUE)
-
   env <- new.env()
   calculate_once <- function(A, verbose = debug) {
     if(identical(A, env$A)) {
@@ -195,28 +194,27 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
   out$par <- NULL # don't store it twice
   calculate_once(A)
 
+  reord <- order(do.call(c, idx))
   if(classification) {
     classes <- sort(unique(y))
     names(classes) <- classes
-    fitted <- do.call(rbind, Map(env$pij, ysplit, f = function(pp, yy) {
-      outer(seq_len(nrow(pp)), classes, FUN = Vectorize(function(i, yyy) {
-        sum(pij[i, yy == yyy])
-      }))
-    }))
-    fitted <- fitted[order(do.call(c, idx)), ]
+    fitted <- Map(env$pij, ysplit, f = nca_fitted_classification, MoreArgs = list(classes = classes))
+    fitted <- do.call(rbind, unname(fitted))
+    fitted <- fitted[reord, ]
 
   } else {
-    fitted <- Map(env$pij, ysplit, f = function(pp, yy) rowSums(pp * matrix(y, nrow = nrow(pp), ncol = ncol(pp), byrow = TRUE)))
-    fitted <- fitted[order(do.call(c, idx))]
+    fitted <- Map(env$pij, ysplit, f = nca_fitted_regression)
+    fitted <- do.call(c, unname(fitted))
+    fitted <- fitted[reord]
     classes <- NULL
   }
 
   structure(list(
     optim = out,
     coefficients = A,
-    projected_X = AX,
-    y = y,
-    neighborhood = neighborhood,
+    projected_X = env$AX,
+    y = ysplit,
+    neighborhood_membership = idx,
     neighborhood_names = names(ysplit),
     fitted = fitted,
     classification = classification,
