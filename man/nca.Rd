@@ -3,6 +3,7 @@
 \name{nca}
 \alias{nca}
 \alias{nca.fit}
+\alias{predict.nca}
 \title{Neighborhood Components Analysis}
 \usage{
 nca(formula, data, subset, na.action, ...)
@@ -16,8 +17,11 @@ nca.fit(
   lambda = 0,
   optim.method = "L-BFGS-B",
   optim.control = list(),
-  ...
+  ...,
+  debug = FALSE
 )
+
+\method{predict}{nca}(object, newdata, ..., na.action = stats::na.pass)
 }
 \arguments{
 \item{formula}{A formula denoting the response and features.}
@@ -51,6 +55,12 @@ and for classification it defaults to \code{\link{loss_inaccuracy}}.}
 
 \item{optim.control}{The control passed to \code{\link{optim}}. It can be
 useful for, e.g., increasing verbosity of the optimization.}
+
+\item{debug}{A logical, for debugging}
+
+\item{object}{An object of class \code{'nca'}}
+
+\item{newdata}{New data to predict}
 }
 \description{
 Neighborhood Components Analysis

@@ -1,13 +1,16 @@
-calculate_pij <- function(AX, unnormalized = FALSE) {
+calculate_pij <- function(AX, ref = NULL, unnormalized = FALSE) {
+  if(nr <- is.null(ref)) ref <- AX
   N <- ncol(AX)
   pij <- t(vapply(1:N, function(i) {
-    tmp <- -colSums((AX - AX[, i])^2)
-    tmp[i] <- -Inf
+    tmp <- -colSums((ref - AX[, i])^2)
+    if(nr) {
+      tmp[i] <- -Inf # can't be a neighbor to oneself
+    }
     tmp <- tmp - max(tmp) # this is okay because we're multiplying both top and bottom
     if(unnormalized) return(tmp)
     tmp <- exp(tmp)
     tmp / sum(tmp)
-  }, numeric(N)))
+  }, numeric(ncol(ref))))
   stopifnot(!anyNA(pij))
   pij
 }
