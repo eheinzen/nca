@@ -72,7 +72,7 @@ nca <- function(formula, data, subset, na.action, ...) {
 #' @rdname nca
 #' @export
 nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL,
-                    lambda = 0, optim.method = "L-BFGS-B", optim.control = list(), ...) {
+                    lambda = 0, optim.method = "L-BFGS-B", optim.control = list(), ..., debug = FALSE) {
   # set.seed(20230920)
   # X <- matrix(rnorm(1000), 100, 10)
   # y <- drop(X %*% rnorm(10))
@@ -90,8 +90,14 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     length(y) == nrow(X),
     lambda >= 0,
     !anyNA(X),
-    !anyNA(y)
+    !anyNA(y),
+    is.list(optim.control)
   )
+  if(debug) {
+    if(is.null(optim.control$REPORT)) optim.control$REPORT <- 1
+    if(is.null(optim.control$trace)) optim.control$trace <- 1
+  }
+
   if(is.null(loss) && (is.factor(y) || is.character(y))) {
     classification <- TRUE
     loss <- "loss_inaccuracy"
@@ -115,17 +121,33 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     A.init[cbind(idx, idx)] <- 1
   }
 
+  env <- new.env()
+  calculate_once <- function(A) {
+    if(identical(A, env$A)) {
+      if(debug) cat("Already have it\n")
+      return(NULL)
+    }
+    if(debug) cat("Recalculating\n")
+    env$A <- A
+    env$AX <- A %*% t(X)
+    env$pij <- calculate_pij(env$AX)
+    return(NULL)
+  }
+
   calculate_objective <- function(A) {
     dim(A) <- dim(A.init)
-    AX <- A %*% t(X)
-    pij <- calculate_pij(AX)
-    mean(colSums(t(pij) * yiyj)) + lambda*sum(A^2) # since we're minimizing, we want to *add* the penalty
+    calculate_once(A)
+    # stopifnot(env$A == A)
+    mean(colSums(t(env$pij) * yiyj)) + lambda*sum(A^2) # since we're minimizing, we want to *add* the penalty
   }
 
   calculate_gradient <- function(A) {
     dim(A) <- dim(A.init)
-    AX <- A %*% t(X)
-    pij <- calculate_pij(AX)
+    calculate_once(A)
+    # stopifnot(env$A == A)
+
+    AX <- env$AX
+    pij <- env$pij
     py <- pij * yiyj
     pi <- rowSums(py)
     W <- py - pij * matrix(pi, nrow = N, ncol = N)

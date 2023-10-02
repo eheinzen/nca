@@ -10,3 +10,4 @@ renv
 renv.lock
 .Renviron
 .Rprofile
+ignore
