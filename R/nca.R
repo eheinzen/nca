@@ -17,8 +17,8 @@
 #'   and for classification it defaults to \code{\link{loss_inaccuracy}}.
 #' @param lambda A penalty parameter to penalize the transformation matrix back to 0. The penalty applied
 #'   is \code{1/2 * lambda * sum(transformation^2)}.
-#' @param optim.method The method passed to \code{\link{optim}}.
-#' @param optim.control The control passed to \code{\link{optim}}. It can be
+#' @param optim_method The method passed to \code{\link{optim}}.
+#' @param optim_control The control passed to \code{\link{optim}}. It can be
 #'   useful for, e.g., increasing verbosity of the optimization.
 #' @param debug A logical, for debugging
 #' @param newdata New data to predict
@@ -78,17 +78,17 @@ nca <- function(formula, data, subset, na.action, ...) {
 #' @rdname nca
 #' @export
 nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL, ...,
-                    lambda = 0, optim.method = "L-BFGS-B", optim.control = list(), debug = FALSE) {
+                    lambda = 0, optim_method = "L-BFGS-B", optim_control = list(), debug = FALSE) {
   # set.seed(20230920)
   # X <- matrix(rnorm(1000), 100, 10)
   # y <- drop(X %*% rnorm(10))
   # n_components <- 2
   # lambda = 0
   # loss <- NULL
-  # optim.method <- "L-BFGS-B"
-  # optim.control <- list(REPORT = 1L, trace = 1)
+  # optim_method <- "L-BFGS-B"
+  # optim_control <- list(REPORT = 1L, trace = 1)
   # init <- "pca"
-  # nca.fit(y = y, X = X, n_components = n_components, optim.control = optim.control)
+  # nca.fit(y = y, X = X, n_components = n_components, optim_control = optim_control)
   stopifnot(
     n_components >= 1,
     is.matrix(X),
@@ -98,11 +98,11 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     lambda >= 0,
     !anyNA(X),
     !anyNA(y),
-    is.list(optim.control)
+    is.list(optim_control)
   )
   if(debug) {
-    if(is.null(optim.control$REPORT)) optim.control$REPORT <- 1
-    if(is.null(optim.control$trace)) optim.control$trace <- 1
+    if(is.null(optim_control$REPORT)) optim_control$REPORT <- 1
+    if(is.null(optim_control$trace)) optim_control$trace <- 1
   }
 
   if(is.null(loss) && (is.factor(y) || is.character(y))) {
@@ -168,8 +168,8 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     par = A.init,
     fn = calculate_objective,
     gr = calculate_gradient,
-    method = optim.method,
-    control = optim.control
+    method = optim_method,
+    control = optim_control
   )
 
   A <- out$par

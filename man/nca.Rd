@@ -14,10 +14,10 @@ nca.fit(
   n_components,
   init = c("pca", "identity"),
   loss = NULL,
-  lambda = 0,
-  optim.method = "L-BFGS-B",
-  optim.control = list(),
   ...,
+  lambda = 0,
+  optim_method = "L-BFGS-B",
+  optim_control = list(),
   debug = FALSE
 )
 
@@ -52,9 +52,9 @@ and for classification it defaults to \code{\link{loss_inaccuracy}}.}
 \item{lambda}{A penalty parameter to penalize the transformation matrix back to 0. The penalty applied
 is \code{1/2 * lambda * sum(transformation^2)}.}
 
-\item{optim.method}{The method passed to \code{\link{optim}}.}
+\item{optim_method}{The method passed to \code{\link{optim}}.}
 
-\item{optim.control}{The control passed to \code{\link{optim}}. It can be
+\item{optim_control}{The control passed to \code{\link{optim}}. It can be
 useful for, e.g., increasing verbosity of the optimization.}
 
 \item{debug}{A logical, for debugging}
