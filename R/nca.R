@@ -77,8 +77,8 @@ nca <- function(formula, data, subset, na.action, ...) {
 
 #' @rdname nca
 #' @export
-nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL,
-                    lambda = 0, optim.method = "L-BFGS-B", optim.control = list(), ..., debug = FALSE) {
+nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL, ...,
+                    lambda = 0, optim.method = "L-BFGS-B", optim.control = list(), debug = FALSE) {
   # set.seed(20230920)
   # X <- matrix(rnorm(1000), 100, 10)
   # y <- drop(X %*% rnorm(10))
