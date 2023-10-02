@@ -49,7 +49,8 @@ the loss between two elements of \code{y}. It is assumed (but not checked)
 that the loss is symmetric. For regression, this defaults to \code{\link{loss_sq_error}},
 and for classification it defaults to \code{\link{loss_inaccuracy}}.}
 
-\item{lambda}{A penalty parameter to penalize the transformation matrix back to 0.}
+\item{lambda}{A penalty parameter to penalize the transformation matrix back to 0. The penalty applied
+is \code{1/2 * lambda * sum(transformation^2)}.}
 
 \item{optim.method}{The method passed to \code{\link{optim}}.}
 

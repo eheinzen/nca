@@ -15,7 +15,8 @@
 #'   the loss between two elements of \code{y}. It is assumed (but not checked)
 #'   that the loss is symmetric. For regression, this defaults to \code{\link{loss_sq_error}},
 #'   and for classification it defaults to \code{\link{loss_inaccuracy}}.
-#' @param lambda A penalty parameter to penalize the transformation matrix back to 0.
+#' @param lambda A penalty parameter to penalize the transformation matrix back to 0. The penalty applied
+#'   is \code{1/2 * lambda * sum(transformation^2)}.
 #' @param optim.method The method passed to \code{\link{optim}}.
 #' @param optim.control The control passed to \code{\link{optim}}. It can be
 #'   useful for, e.g., increasing verbosity of the optimization.
@@ -144,7 +145,7 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     dim(A) <- dim(A.init)
     calculate_once(A)
     # stopifnot(env$A == A)
-    mean(colSums(t(env$pij) * yiyj)) + lambda*sum(A^2) # since we're minimizing, we want to *add* the penalty
+    mean(colSums(t(env$pij) * yiyj)) + 0.5*lambda*sum(A^2) # since we're minimizing, we want to *add* the penalty
   }
 
   calculate_gradient <- function(A) {
@@ -160,7 +161,7 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     stopifnot(all.equal(rowSums(W), rep.int(0, N)))
     W2 <- W + t(W)
     diag(W2) <- -colSums(W)
-    (2/N)*AX %*% W2 %*% X + 2*lambda*A
+    (2/N)*AX %*% W2 %*% X + lambda*A
   }
 
   out <- stats::optim(
