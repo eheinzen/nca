@@ -15,11 +15,14 @@ nca.fit(
   init = c("pca", "identity"),
   loss = NULL,
   ...,
+  neighborhood = NULL,
   lambda = 0,
   optim_method = "L-BFGS-B",
   optim_control = list(),
   debug = FALSE
 )
+
+\method{predict}{nca}(object, newdata, ..., na.action = stats::na.pass)
 
 \method{predict}{nca}(object, newdata, ..., na.action = stats::na.pass)
 }
@@ -48,6 +51,12 @@ for which regression will be performed.}
 the loss between two elements of \code{y}. It is assumed (but not checked)
 that the loss is symmetric. For regression, this defaults to \code{\link{loss_sq_error}},
 and for classification it defaults to \code{\link{loss_inaccuracy}}.}
+
+\item{neighborhood}{An indicator of a distinct neighborhood,
+for when, a priori, the data is completely separable into distinct groups
+(that is, \code{p_ij} can be rearranged to be block diagonal); having this
+prior knowledge of which points structurally can and can't be neighbors speeds
+up computation}
 
 \item{lambda}{A penalty parameter to penalize the transformation matrix back to 0. The penalty applied
 is \code{1/2 * lambda * sum(transformation^2)}.}

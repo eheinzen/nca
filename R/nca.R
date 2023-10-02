@@ -10,6 +10,11 @@
 #'   for which regression will be performed.
 #' @param X A matrix of N data points (rows) by K features (columns).
 #' @param n_components How many components to use for the NCA algorithm.
+#' @param neighborhood An indicator of a distinct neighborhood,
+#'   for when, a priori, the data is completely separable into distinct groups
+#'   (that is, \code{p_ij} can be rearranged to be block diagonal); having this
+#'   prior knowledge of which points structurally can and can't be neighbors speeds
+#'   up computation
 #' @param init How to initialize the transformation matrix
 #' @param loss A vectorized function fed to \code{\link{outer}} for determining
 #'   the loss between two elements of \code{y}. It is assumed (but not checked)
@@ -74,11 +79,11 @@ nca <- function(formula, data, subset, na.action, ...) {
   out
 }
 
-
 #' @rdname nca
 #' @export
 nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL, ...,
-                    lambda = 0, optim_method = "L-BFGS-B", optim_control = list(), debug = FALSE) {
+                     neighborhood = NULL,
+                     lambda = 0, optim_method = "L-BFGS-B", optim_control = list(), debug = FALSE) {
   # set.seed(20230920)
   # X <- matrix(rnorm(1000), 100, 10)
   # y <- drop(X %*% rnorm(10))
@@ -98,6 +103,7 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     lambda >= 0,
     !anyNA(X),
     !anyNA(y),
+    is.null(neighborhood) || length(neighborhood) == nrow(X),
     is.list(optim_control)
   )
   if(debug) {
@@ -114,30 +120,40 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     loss <- "loss_sq_error"
   }
   loss <- match.fun(loss)
-  yiyj <- outer(y, y, FUN = loss, ...)
+
   N <- nrow(X)
   k <- ncol(X)
+
+  has_nbh <- !is.null(neighborhood)
+  if(!has_nbh) {
+    neighborhood <- rep.int(1, N)
+  }
+  idx <- split(seq_len(N), f = neighborhood, drop = TRUE)
+  ysplit <- split(y, f = neighborhood, drop = TRUE)
+  yiyj <- lapply(ysplit, function(yy) outer(yy, yy, FUN = loss, ...))
 
   init <- match.arg(init)
   if(init == "pca") {
     X.pca <- stats::prcomp(X)
-    A.init <- t(X.pca$rotation[, paste0("PC", seq_len(n_components)), drop = FALSE])
+    A.init <- unname(t(X.pca$rotation[, paste0("PC", seq_len(n_components)), drop = FALSE]))
   } else if(init == "identity") {
     A.init <- matrix(0, nrow = n_components, ncol = k)
     idx <- seq_len(min(k, n_components))
     A.init[cbind(idx, idx)] <- 1
   }
 
+  Xsplit <- split.data.frame(X, f = neighborhood, drop = TRUE)
+
   env <- new.env()
-  calculate_once <- function(A) {
+  calculate_once <- function(A, verbose = debug) {
     if(identical(A, env$A)) {
-      if(debug) cat("Already have it\n")
+      if(verbose) cat("Already have it\n")
       return(NULL)
     }
-    if(debug) cat("Recalculating\n")
+    if(verbose) cat("Recalculating\n")
     env$A <- A
-    env$AX <- A %*% t(X)
-    env$pij <- calculate_pij(env$AX)
+    env$AX <- lapply(Xsplit, function(xx) A %*% t(xx))
+    env$pij <- lapply(env$AX, calculate_pij)
     return(NULL)
   }
 
@@ -145,7 +161,7 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     dim(A) <- dim(A.init)
     calculate_once(A)
     # stopifnot(env$A == A)
-    mean(colSums(t(env$pij) * yiyj)) + 0.5*lambda*sum(A^2) # since we're minimizing, we want to *add* the penalty
+    do.call(sum, Map(env$pij, yiyj, f = function(pp, yy) sum(pp * yy)))/N + 0.5*lambda*sum(A^2) # since we're minimizing, we want to *add* the penalty
   }
 
   calculate_gradient <- function(A) {
@@ -155,13 +171,16 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
 
     AX <- env$AX
     pij <- env$pij
-    py <- pij * yiyj
-    pi <- rowSums(py)
-    W <- py - pij * matrix(pi, nrow = N, ncol = N)
-    stopifnot(all.equal(rowSums(W), rep.int(0, N)))
-    W2 <- W + t(W)
-    diag(W2) <- -colSums(W)
-    (2/N)*AX %*% W2 %*% X + lambda*A
+    tmp <- Map(AX, pij, yiyj, Xsplit, f = function(ax, pp, yy, xx) {
+      py <- pp * yy
+      pi <- rowSums(py)
+      W <- py - pp * matrix(pi, nrow = nrow(pp), ncol = ncol(pp), byrow = FALSE)
+      stopifnot(all.equal(rowSums(W), rep.int(0, nrow(pp))))
+      W2 <- W + t(W)
+      diag(W2) <- -colSums(W)
+      ax %*% W2 %*% xx
+    })
+    (2/N)*Reduce(`+`, tmp) + lambda*A
   }
 
   out <- stats::optim(
@@ -174,16 +193,21 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
 
   A <- out$par
   out$par <- NULL # don't store it twice
-  AX <- A %*% t(X)
-  pij <- calculate_pij(AX)
+  calculate_once(A)
+
   if(classification) {
     classes <- sort(unique(y))
     names(classes) <- classes
-    fitted <- outer(1:N, classes, FUN = Vectorize(function(i, yy) {
-      sum(pij[i, y == yy])
+    fitted <- do.call(rbind, Map(env$pij, ysplit, f = function(pp, yy) {
+      outer(seq_len(nrow(pp)), classes, FUN = Vectorize(function(i, yyy) {
+        sum(pij[i, yy == yyy])
+      }))
     }))
+    fitted <- fitted[order(do.call(c, idx)), ]
+
   } else {
-    fitted <- rowSums(pij * matrix(y, nrow = N, ncol = N, byrow = TRUE))
+    fitted <- Map(env$pij, ysplit, f = function(pp, yy) rowSums(pp * matrix(y, nrow = nrow(pp), ncol = ncol(pp), byrow = TRUE)))
+    fitted <- fitted[order(do.call(c, idx))]
     classes <- NULL
   }
 
@@ -192,6 +216,8 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     coefficients = A,
     projected_X = AX,
     y = y,
+    neighborhood = neighborhood,
+    neighborhood_names = names(ysplit),
     fitted = fitted,
     classification = classification,
     classes = classes,

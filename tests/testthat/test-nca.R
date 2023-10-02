@@ -1,4 +1,18 @@
 data(iris)
+
+test_that("two neighborhoods work", {
+  y <- iris$Species
+  X <- as.matrix(iris[names(iris) != "Species"])
+  nca.iris <- nca.fit(y = y, X = X, n_components = 1)
+  nca.iris2 <- nca.fit(y = c(y, y), X = rbind(X, X), n_components = 1,
+                       neighborhood = rep(0:1, each = nrow(iris)))
+
+  expect_equal(nca.iris$coefficients, nca.iris2$coefficients, tolerance = 1e-6)
+})
+
+
+
+
 test_that("prediction works for data.frame", {
   nca.iris <- nca(Species ~ ., data = iris, n_components = 1)
   expect_false(all(fitted(nca.iris) == predict(nca.iris, newdata = iris)))
@@ -23,3 +37,6 @@ test_that("prediction works for matrix", {
   expect_error(predict(nca.iris, newdata = matrix(1, 1, 1)), "must be compatible")
 
 })
+
+
+
