@@ -10,7 +10,7 @@
 #'   for which regression will be performed.
 #' @param X A matrix of N data points (rows) by K features (columns).
 #' @param n_components How many components to use for the NCA algorithm.
-#' @param init How to intialize the transformation matrix
+#' @param init How to initialize the transformation matrix
 #' @param loss A vectorized function fed to \code{\link{outer}} for determining
 #'   the loss between two elements of \code{y}. It is assumed (but not checked)
 #'   that the loss is symmetric. For regression, this defaults to \code{\link{loss_sq_error}},
