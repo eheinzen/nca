@@ -3,11 +3,13 @@ title: "Gradient Derivation for NCA"
 output: rmarkdown::pdf_document
 header-includes:
    - \usepackage{cancel}
+   - \DeclareMathOperator{\diag}{diag}
 vignette: >
   %\VignetteIndexEntry{Gradient Derivation for NCA}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
 
 The original problem of NCA (Goldberger et al.) is formulated as a maximization of
 
@@ -17,6 +19,8 @@ where
 
 $$p_{ij} = \frac{\exp(-\Vert Ax_{i} - Ax_{j} \Vert)^2}{\sum_{k \ne i}\exp(-\Vert Ax_{i} - Ax_{j} \Vert)^2}$$
 $$p_{ii} = 0$$
+
+Here we take $x_i$ as a column vector corresponding to the i-th row in the matrix $X$.
 
 Let $\epsilon_{ij} = \mathbb{1}_{j \in C_{i}}$. Then we can re-express $f(A)$ as
 
@@ -31,13 +35,17 @@ f'(A) &= -2A \sum_{i} \sum_{j} p_{ij} \epsilon_{ij} \left ((x_{i} - x_{j})(x_{i}
  &= -2A \sum_{i} \left[\left(\sum_{j} p_{ij} \epsilon_{ij} (x_{i} - x_{j})(x_{i} - x_{j})^\intercal \right) - \left(\sum_{j}p_{ij} \epsilon_{ij}\right) \left(\sum_{k} p_{ik}(x_{i} - x_{k})(x_{i} - x_{k})^\intercal \right)\right] \\
   &= -2A \sum_{i} \left[\left(\sum_{j} p_{ij} \epsilon_{ij} (x_{i} - x_{j})(x_{i} - x_{j})^\intercal \right) - \left(\sum_{k}p_{ik} \epsilon_{ik}\right) \left(\sum_{j} p_{ij}(x_{i} - x_{j})(x_{i} - x_{j})^\intercal \right)\right] \\
   &= -2A \sum_{i} \sum_{j} p_{ij} \left(\epsilon_{ij}  - \sum_{k}p_{ik} \epsilon_{ik}\right) (x_{i} - x_{j})(x_{i} - x_{j})^\intercal  \\
-  &= -2A \sum_{i} \sum_{j} W_{ij} (x_{i} - x_{j})(x_{i} - x_{j})^\intercal  \\
-  &= \cancelto{0}{-2A \left(\sum_{i} \sum_{j} W_{ij} x_{i}x_{i}^\intercal \right)} +
-  -2A \left(\sum_{i} \sum_{j} W_{ij} x_{j}x_{j}^\intercal \right) -
-  -2A \left(\sum_{i} \sum_{j} W_{ij} x_{i}x_{j}^\intercal \right) -
-  -2A \left(\sum_{i} \sum_{j} W_{ij} x_{j}x_{i}^\intercal \right) \\
-  &= -2A X^\intercal W X
+  &= -2A \sum_{i} \sum_{j} w_{ij} (x_{i} - x_{j})(x_{i} - x_{j})^\intercal  \\
+  &= \cancelto{0}{-2A \left(\sum_{i} \sum_{j} w_{ij} x_{i}x_{i}^\intercal \right)} +
+  -2A \left(\sum_{i} \sum_{j} w_{ij} x_{j}x_{j}^\intercal \right) -
+  -2A \left(\sum_{i} \sum_{j} w_{ij} x_{i}x_{j}^\intercal \right) -
+  -2A \left(\sum_{i} \sum_{j} w_{ij} x_{j}x_{i}^\intercal \right) \\
+  &=-2A \left(\sum_{j}x_{j}x_{j}^\intercal  \left(\sum_{i} w_{ij}\right) \right) +
+  2A \left(\sum_{i} \sum_{j} w_{ij} x_{i}x_{j}^\intercal \right) +
+  2A \left(\sum_{i} \sum_{j} w_{ij} x_{i}x_{j}^\intercal \right)^\intercal \\
+  &=-2A X^\intercal \diag\left(\sum_{i} w_{ij}\right) X +
+  2A  X^\intercal W X +
+  2A X^\intercal W^\intercal X \\
+  &= 2A X^\intercal (-D + W + W^\intercal) X
 \end{split}
 \end{equation}
-
-for suitably chosen W
