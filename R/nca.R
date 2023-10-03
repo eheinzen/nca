@@ -15,7 +15,9 @@
 #'   (that is, \code{p_ij} can be rearranged to be block diagonal); having this
 #'   prior knowledge of which points structurally can and can't be neighbors speeds
 #'   up computation
-#' @param init How to initialize the transformation matrix
+#' @param init How to initialize the transformation matrix. This can either be a
+#'   numeric matrix from which to start the gradient descent, or a string denoting
+#'   "pca" inits or "identity" matrix inits.
 #' @param loss A vectorized function fed to \code{\link{outer}} for determining
 #'   the loss between two elements of \code{y}. It is assumed (but not checked)
 #'   that the loss is symmetric. For regression, this defaults to \code{\link{loss_sq_error}},
@@ -82,8 +84,8 @@ nca <- function(formula, data, neighborhood, subset, na.action, ...) {
 #' @rdname nca
 #' @export
 nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL, ...,
-                     neighborhood = NULL,
-                     lambda = 0, optim_method = "L-BFGS-B", optim_control = list(), debug = FALSE) {
+                    neighborhood = NULL,
+                    lambda = 0, optim_method = "L-BFGS-B", optim_control = list(), debug = FALSE) {
   # set.seed(20230920)
   # X <- matrix(rnorm(1000), 100, 10)
   # y <- drop(X %*% rnorm(10))
@@ -95,10 +97,8 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
   # init <- "pca"
   # nca.fit(y = y, X = X, n_components = n_components, optim_control = optim_control)
   stopifnot(
-    n_components >= 1,
     is.matrix(X),
     is.numeric(X),
-    n_components <= ncol(X),
     length(y) == nrow(X),
     lambda >= 0,
     !anyNA(X),
@@ -132,14 +132,29 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
   ysplit <- split(y, f = neighborhood, drop = TRUE)
   yiyj <- lapply(ysplit, function(yy) outer(yy, yy, FUN = loss, ...))
 
-  init <- match.arg(init)
-  if(init == "pca") {
-    X.pca <- stats::prcomp(X)
-    A.init <- unname(t(X.pca$rotation[, paste0("PC", seq_len(n_components)), drop = FALSE]))
-  } else if(init == "identity") {
-    A.init <- matrix(0, nrow = n_components, ncol = k)
-    idx <- seq_len(min(k, n_components))
-    A.init[cbind(idx, idx)] <- 1
+  if(!missing(init) && is.matrix(init)) {
+    stopifnot(
+      is.numeric(init),
+      ncol(init) == k,
+      nrow(init) <= k,
+      "The inits can't be all zero for any row" = rowSums(init != 0) >= 1,
+      "The rows of the inits should all be distinct" = nrow(unique(init)) == nrow(init)
+    )
+    A.init <- init
+  } else {
+    stopifnot(
+      n_components >= 1,
+      n_components <= k
+    )
+    init <- match.arg(init)
+    if(init == "pca") {
+      X.pca <- stats::prcomp(X)
+      A.init <- unname(t(X.pca$rotation[, paste0("PC", seq_len(n_components)), drop = FALSE]))
+    } else if(init == "identity") {
+      A.init <- matrix(0, nrow = n_components, ncol = k)
+      idx <- seq_len(min(k, n_components))
+      A.init[cbind(idx, idx)] <- 1
+    }
   }
 
   Xsplit <- split.data.frame(X, f = neighborhood, drop = TRUE)
@@ -233,3 +248,4 @@ print.nca <- function(x, ...) {
     sep = ""
   )
 }
+

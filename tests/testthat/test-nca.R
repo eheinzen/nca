@@ -8,6 +8,9 @@ test_that("matrix and formula interfaces give the same answer", {
   expect_equal(nca.iris$coefficients, nca.iris3$coefficients)
 })
 
+# -------------------------------------------------------------------------
+
+
 test_that("two neighborhoods work", {
   y <- iris$Species
   X <- as.matrix(iris[names(iris) != "Species"])
@@ -30,6 +33,9 @@ test_that("two neighborhoods work", {
   expect_identical(dim(pred), c(nrow(iris), 3L))
 })
 
+
+
+# -------------------------------------------------------------------------
 
 
 
@@ -61,3 +67,11 @@ test_that("prediction works for matrix", {
 
 
 
+# -------------------------------------------------------------------------
+
+
+test_that("custom inits work", {
+  expect_error(nca(Species ~ ., data = iris, init = matrix(0, 1, 4)), "can't be all zero")
+  expect_error(nca(Species ~ ., data = iris, init = matrix(1, 2, 4)), "distinct")
+  expect_error(nca(Species ~ ., data = iris, init = cbind(1:0, 0:1, 0, 0)), NA)
+})

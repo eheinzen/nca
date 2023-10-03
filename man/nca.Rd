@@ -52,7 +52,9 @@ for which regression will be performed.}
 
 \item{n_components}{How many components to use for the NCA algorithm.}
 
-\item{init}{How to initialize the transformation matrix}
+\item{init}{How to initialize the transformation matrix. This can either be a
+numeric matrix from which to start the gradient descent, or a string denoting
+"pca" inits or "identity" matrix inits.}
 
 \item{loss}{A vectorized function fed to \code{\link{outer}} for determining
 the loss between two elements of \code{y}. It is assumed (but not checked)
