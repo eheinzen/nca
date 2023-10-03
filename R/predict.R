@@ -41,8 +41,8 @@ predict.nca <- function(object, newdata, ..., neighborhood = NULL, na.action = s
       ncol(X) == ncol(object$coefficients)
     )
 
-  } else if(!is.matrix(X)) {
-    stop("'X' must be a data.frame or a matrix")
+  } else if(!is.matrix(newdata)) {
+    stop("'newdata' must be a data.frame or a matrix")
   } else if(!is.null(object$terms)) {
     warning("It is recommended that 'newdata' be a data.frame if the original 'nca' object was fit with one")
   } else {
