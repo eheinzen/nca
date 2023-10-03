@@ -27,7 +27,7 @@
 #'   useful for, e.g., increasing verbosity of the optimization.
 #' @param debug A logical, for debugging
 #' @param newdata New data to predict
-#' @param object An object of class \code{'nca'}
+#' @param object,x An object of class \code{'nca'}
 #' @details
 #' This differs from the NCA publication (Goldberger et al.) in a few ways.
 #'  First, it uses a vectorized
@@ -223,3 +223,13 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
   ), class = "nca")
 }
 
+#' @rdname nca
+#' @export
+print.nca <- function(x, ...) {
+  cat(
+    "\nAn object of class 'nca': ",
+    if(x$classification) paste("classification on", length(x$classes), "classes") else "regression",
+    " using ", nrow(x$coefficients), " component(s).\n",
+    sep = ""
+  )
+}
