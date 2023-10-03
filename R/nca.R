@@ -205,6 +205,8 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     control = optim_control
   )
 
+  if(out$convergence > 0) warning("The algorithm didn't converge")
+
   A <- out$par
   out$par <- NULL # don't store it twice
   calculate_once(A)

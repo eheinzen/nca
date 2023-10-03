@@ -75,3 +75,13 @@ test_that("custom inits work", {
   expect_error(nca(Species ~ ., data = iris, init = matrix(1, 2, 4)), "distinct")
   expect_error(nca(Species ~ ., data = iris, init = cbind(1:0, 0:1, 0, 0)), NA)
 })
+
+
+
+# -------------------------------------------------------------------------
+
+
+test_that("A warning is thrown if it doesn't converge", {
+  expect_warning(nca(Species ~ ., data = iris, n_components = 1, optim_control = list(maxit = 1L)), "didn't converge")
+})
+
