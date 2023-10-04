@@ -3,7 +3,7 @@
 S3method(predict,nca)
 S3method(print,nca)
 export(loss_abs_error)
-export(loss_inaccuracy)
+export(loss_misclassification)
 export(loss_sq_error)
 export(loss_tolerance)
 export(nca)

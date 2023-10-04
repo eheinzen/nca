@@ -10,7 +10,7 @@ NULL
 
 #' @rdname nca_loss
 #' @export
-loss_inaccuracy <- function(x, y, ...) {
+loss_misclassification <- function(x, y, ...) {
   # this function is only needed because it has dots
   x != y
 }

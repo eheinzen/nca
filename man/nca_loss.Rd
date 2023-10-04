@@ -2,13 +2,13 @@
 % Please edit documentation in R/loss.R
 \name{nca_loss}
 \alias{nca_loss}
-\alias{loss_inaccuracy}
+\alias{loss_misclassification}
 \alias{loss_sq_error}
 \alias{loss_abs_error}
 \alias{loss_tolerance}
 \title{Loss functions}
 \usage{
-loss_inaccuracy(x, y, ...)
+loss_misclassification(x, y, ...)
 
 loss_sq_error(x, y, ...)
 

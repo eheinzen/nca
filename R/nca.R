@@ -21,7 +21,7 @@
 #' @param loss A vectorized function fed to \code{\link{outer}} for determining
 #'   the loss between two elements of \code{y}. It is assumed (but not checked)
 #'   that the loss is symmetric. For regression, this defaults to \code{\link{loss_sq_error}},
-#'   and for classification it defaults to \code{\link{loss_inaccuracy}}.
+#'   and for classification it defaults to \code{\link{loss_misclassification}}.
 #' @param lambda A penalty parameter to penalize the transformation matrix back to 0. The penalty applied
 #'   is \code{1/2 * lambda * sum(transformation^2)}.
 #' @param optim_method The method passed to \code{\link{optim}}.
@@ -113,7 +113,7 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
 
   if(is.null(loss) && (is.factor(y) || is.character(y))) {
     classification <- TRUE
-    loss <- "loss_inaccuracy"
+    loss <- "loss_misclassification"
   } else {
     stopifnot(is.numeric(y))
     classification <- FALSE

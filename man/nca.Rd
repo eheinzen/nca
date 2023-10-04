@@ -59,7 +59,7 @@ numeric matrix from which to start the gradient descent, or a string denoting
 \item{loss}{A vectorized function fed to \code{\link{outer}} for determining
 the loss between two elements of \code{y}. It is assumed (but not checked)
 that the loss is symmetric. For regression, this defaults to \code{\link{loss_sq_error}},
-and for classification it defaults to \code{\link{loss_inaccuracy}}.}
+and for classification it defaults to \code{\link{loss_misclassification}}.}
 
 \item{lambda}{A penalty parameter to penalize the transformation matrix back to 0. The penalty applied
 is \code{1/2 * lambda * sum(transformation^2)}.}
