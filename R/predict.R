@@ -5,9 +5,9 @@ nca_fitted_regression <- function(pp, yy) {
 
 nca_fitted_classification <- function(pp, yy, classes) {
   stopifnot(ncol(pp) == length(yy))
-  outer(seq_len(nrow(pp)), classes, FUN = Vectorize(function(i, yyy) {
-    sum(pp[i, yy == yyy])
-  }))
+  vapply(classes, function(yyy) {
+    rowSums(pp[, yy == yyy])
+  }, numeric(nrow(pp)))
 }
 
 #' @rdname nca
