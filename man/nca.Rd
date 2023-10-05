@@ -15,6 +15,7 @@ nca.fit(
   n_components,
   init = c("pca", "identity"),
   loss = NULL,
+  mode = c("classification", "regression"),
   ...,
   neighborhood = NULL,
   lambda = 0,
@@ -60,6 +61,9 @@ numeric matrix from which to start the gradient descent, or a string denoting
 the loss between two elements of \code{y}. It is assumed (but not checked)
 that the loss is symmetric. For regression, this defaults to \code{\link{loss_sq_error}},
 and for classification it defaults to \code{\link{loss_misclassification}}.}
+
+\item{mode}{One of "classification" or "regression". If this argument is missing,
+it is inferred based on the class of \code{y}.}
 
 \item{lambda}{A penalty parameter to penalize the transformation matrix back to 0. The penalty applied
 is \code{1/2 * lambda * sum(transformation^2)}.}

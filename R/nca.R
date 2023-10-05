@@ -22,6 +22,8 @@
 #'   the loss between two elements of \code{y}. It is assumed (but not checked)
 #'   that the loss is symmetric. For regression, this defaults to \code{\link{loss_sq_error}},
 #'   and for classification it defaults to \code{\link{loss_misclassification}}.
+#' @param mode One of "classification" or "regression". If this argument is missing,
+#'   it is inferred based on the class of \code{y}.
 #' @param lambda A penalty parameter to penalize the transformation matrix back to 0. The penalty applied
 #'   is \code{1/2 * lambda * sum(transformation^2)}.
 #' @param optim_method The method passed to \code{\link{optim}}.
@@ -83,7 +85,7 @@ nca <- function(formula, data, neighborhood, subset, na.action, ...) {
 
 #' @rdname nca
 #' @export
-nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL, ...,
+nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL, mode = c("classification", "regression"), ...,
                     neighborhood = NULL,
                     lambda = 0, optim_method = "L-BFGS-B", optim_control = list(), debug = FALSE) {
   # set.seed(20230920)
@@ -106,18 +108,26 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     is.null(neighborhood) || length(neighborhood) == nrow(X),
     is.list(optim_control)
   )
+  if(!missing(mode)) mode <- match.arg(mode)
   if(debug) {
     if(is.null(optim_control$REPORT)) optim_control$REPORT <- 1
     if(is.null(optim_control$trace)) optim_control$trace <- 1
   }
 
-  if(is.null(loss) && (is.factor(y) || is.character(y))) {
+  if(is.null(loss) && (is.factor(y) || is.character(y) || (!missing(mode) && mode == "classification"))) {
     classification <- TRUE
     loss <- "loss_misclassification"
   } else if(is.null(loss)) {
     stopifnot(is.numeric(y))
     classification <- FALSE
     loss <- "loss_sq_error"
+  } else {
+    if(missing(mode)) {
+      # we'll try to infer it, but give a message
+      mode <- if(is.factor(y) || is.character(y)) "classification" else "regression"
+      message("You passed a custom function to `loss=` without specifying `mode=`. Inferring `mode = '", mode, "'`")
+    }
+    classification <- mode == "classification"
   }
   loss <- match.fun(loss)
 

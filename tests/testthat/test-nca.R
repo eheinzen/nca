@@ -85,3 +85,14 @@ test_that("A warning is thrown if it doesn't converge", {
   expect_warning(nca(Species ~ ., data = iris, n_components = 1, optim_control = list(maxit = 1L)), "didn't converge")
 })
 
+
+
+# -------------------------------------------------------------------------
+
+
+test_that("custom loss function works", {
+  expect_message(nca(Species ~ ., data = iris, n_components = 1, loss = loss_misclassification), "You passed a custom")
+  expect_message(nca(Species ~ ., data = iris, n_components = 1, loss = loss_misclassification, mode = "classification"), NA)
+})
+
+
