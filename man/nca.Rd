@@ -79,6 +79,9 @@ useful for, e.g., increasing verbosity of the optimization.}
 
 \item{newdata}{New data to predict}
 }
+\value{
+An object of class 'nca', for which there are predict and print methods.
+}
 \description{
 Neighborhood Components Analysis
 }

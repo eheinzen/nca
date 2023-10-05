@@ -38,7 +38,7 @@
 #' gradient; second, it minimizes loss instead of maximizing accuracy (hence it
 #' can support regression); third, it supports a penalty parameter (\code{lambda},
 #' as in Yang et al.).
-#'
+#' @return An object of class 'nca', for which there are predict and print methods.
 #' @examples
 #' library(datasets)
 #' data(iris)
@@ -139,9 +139,10 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     neighborhood <- rep.int(1, N)
   }
   idx <- split(seq_len(N), f = neighborhood, drop = TRUE)
+  cat("Doing yiyj...")
   ysplit <- split(y, f = neighborhood, drop = TRUE)
   yiyj <- lapply(ysplit, function(yy) outer(yy, yy, FUN = loss, ...))
-
+  cat("Done\n")
   if(!missing(init) && is.matrix(init)) {
     stopifnot(
       is.numeric(init),
@@ -166,8 +167,9 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
       A.init[cbind(idx, idx)] <- 1
     }
   }
-
+  cat("Splitting X...")
   Xsplit <- split.data.frame(X, f = neighborhood, drop = TRUE)
+  cat("Done\n")
   env <- new.env()
   calculate_once <- function(A, verbose = debug) {
     if(identical(A, env$A)) {
