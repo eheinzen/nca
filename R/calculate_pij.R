@@ -6,8 +6,8 @@ calculate_pij <- function(AX, ref = NULL, unnormalized = FALSE) {
     if(nr) {
       tmp[i] <- -Inf # can't be a neighbor to oneself
     }
-    tmp <- tmp - max(tmp) # this is okay because we're multiplying both top and bottom
     if(unnormalized) return(tmp)
+    tmp <- tmp - max(tmp) # this is okay because we're multiplying both top and bottom
     tmp <- exp(tmp)
     tmp / sum(tmp)
   }, numeric(ncol(ref))))
