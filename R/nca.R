@@ -139,10 +139,10 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     neighborhood <- rep.int(1, N)
   }
   idx <- split(seq_len(N), f = neighborhood, drop = TRUE)
-  cat("Doing yiyj...")
+  if(debug) cat("Doing yiyj...")
   ysplit <- split(y, f = neighborhood, drop = TRUE)
   yiyj <- lapply(ysplit, function(yy) outer(yy, yy, FUN = loss, ...))
-  cat("Done\n")
+  if(debug) cat("Done\n")
   if(!missing(init) && is.matrix(init)) {
     stopifnot(
       is.numeric(init),
@@ -167,9 +167,9 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
       A.init[cbind(idx, idx)] <- 1
     }
   }
-  cat("Splitting X...")
+  if(debug) cat("Splitting X...")
   Xsplit <- split.data.frame(X, f = neighborhood, drop = TRUE)
-  cat("Done\n")
+  if(debug) cat("Done\n")
   env <- new.env()
   calculate_once <- function(A, verbose = debug) {
     if(identical(A, env$A)) {
