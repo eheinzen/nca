@@ -116,11 +116,11 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
 
   if(is.null(loss) && (is.factor(y) || is.character(y) || (!missing(mode) && mode == "classification"))) {
     classification <- TRUE
-    loss <- "loss_misclassification"
+    loss <- loss_misclassification
   } else if(is.null(loss)) {
     stopifnot(is.numeric(y))
     classification <- FALSE
-    loss <- "loss_sq_error"
+    loss <- loss_sq_error
   } else {
     if(missing(mode)) {
       # we'll try to infer it, but give a message
