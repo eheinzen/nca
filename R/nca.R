@@ -9,7 +9,10 @@
 #'   or character vector, for which classification will be performed, or a numeric,
 #'   for which regression will be performed.
 #' @param X A matrix of N data points (rows) by K features (columns).
-#' @param n_components How many components to use for the NCA algorithm.
+#' @param n_components How many components to use for the NCA algorithm, or else the
+#'   special string "diagonal", in which case off-diagonal elements are set to zero.
+#'   This is optional if \code{init} is a matrix, unless you want to opt in to the
+#'   diagonal algorithm.
 #' @param neighborhood An indicator of a distinct neighborhood,
 #'   for when, a priori, the data is completely separable into distinct groups
 #'   (that is, \code{p_ij} can be rearranged to be block diagonal); having this
@@ -46,6 +49,10 @@
 #' nca.iris <- nca(Species ~ ., data = iris, n_components = 1)
 #' pred <- fitted(nca.iris)
 #' table(colnames(pred)[apply(pred, 1, which.max)] == iris$Species) # 2% Leave-One-Out error
+#'
+#' nca.iris.diag <- nca(Species ~ ., data = iris, n_components = "diagonal")
+#' pred <- fitted(nca.iris.diag)
+#' table(colnames(pred)[apply(pred, 1, which.max)] == iris$Species) # 3.3% Leave-One-Out error
 #'
 #' @references J. Goldberger, G. Hinton, S. Roweis, R. Salakhutdinov.
 #' "Neighbourhood Components Analysis". Advances in Neural Information
@@ -143,28 +150,29 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
   ysplit <- split(y, f = neighborhood, drop = TRUE)
   yiyj <- lapply(ysplit, function(yy) outer(yy, yy, FUN = loss, ...))
   if(debug) cat("Done\n")
+
+  diagg <- !missing(n_components) && identical(n_components, "diagonal")
   if(!missing(init) && is.matrix(init)) {
     stopifnot(
       is.numeric(init),
       ncol(init) == k,
       nrow(init) <= k,
+      "When using the diagonal algorithm, the number of components must be 'k'" = !diagg || nrow(init) == k,
       "The inits can't be all zero for any row" = rowSums(init != 0) >= 1,
       "The rows of the inits should all be distinct" = nrow(unique(init)) == nrow(init)
     )
     A.init <- init
   } else {
-    stopifnot(
-      n_components >= 1,
-      n_components <= k
-    )
-    init <- match.arg(init)
+    if(diagg) n_components <- k
+    stopifnot(diagg || (n_components >= 1 && n_components <= k))
+    init <- if(diagg && missing(init)) "identity" else match.arg(init)
     if(init == "pca") {
       X.pca <- stats::prcomp(X)
       A.init <- unname(t(X.pca$rotation[, paste0("PC", seq_len(n_components)), drop = FALSE]))
     } else if(init == "identity") {
       A.init <- matrix(0, nrow = n_components, ncol = k)
-      idx <- seq_len(min(k, n_components))
-      A.init[cbind(idx, idx)] <- 1
+      d.idx <- seq_len(min(k, n_components))
+      A.init[cbind(d.idx, d.idx)] <- 1
     }
   }
   if(debug) cat("Splitting X...")
@@ -206,7 +214,9 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
       diag(W2) <- -colSums(W)
       ax %*% W2 %*% xx
     })
-    (2/N)*Reduce(`+`, tmp) + lambda*A
+    grad <- (2/N)*Reduce(`+`, tmp) + lambda*A
+    if(diagg) grad <- diag(diag(grad), k, k)
+    grad
   }
 
   out <- stats::optim(

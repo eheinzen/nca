@@ -51,7 +51,10 @@ for which regression will be performed.}
 
 \item{X}{A matrix of N data points (rows) by K features (columns).}
 
-\item{n_components}{How many components to use for the NCA algorithm.}
+\item{n_components}{How many components to use for the NCA algorithm, or else the
+special string "diagonal", in which case off-diagonal elements are set to zero.
+This is optional if \code{init} is a matrix, unless you want to opt in to the
+diagonal algorithm.}
 
 \item{init}{How to initialize the transformation matrix. This can either be a
 numeric matrix from which to start the gradient descent, or a string denoting
@@ -100,6 +103,7 @@ nca.iris <- nca(Species ~ ., data = iris, n_components = 1)
 pred <- fitted(nca.iris)
 table(colnames(pred)[apply(pred, 1, which.max)] == iris$Species) # 2\% Leave-One-Out error
 
+nca.iris <- nca(Species ~ ., data = iris, n_components = 1)
 }
 \references{
 J. Goldberger, G. Hinton, S. Roweis, R. Salakhutdinov.
