@@ -88,7 +88,7 @@ nca <- function(formula, data, neighborhood, subset, na.action, ...) {
   out$terms <- Terms
   out$na.action <- stats::na.action(mf)
   out$contrasts <- attr(X, "contrasts")
-  out$xlevels <- .getXlevels(Terms, mf)
+  out$xlevels <- stats::.getXlevels(Terms, mf)
   out
 }
 

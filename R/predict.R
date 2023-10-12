@@ -34,8 +34,8 @@ predict.nca <- function(object, newdata, ..., neighborhood = NULL, na.action = s
       neighborhood <- rep.int(object$neighborhood_names, nrow(mf))
     } else if(is.null(neighborhood)) stop("Please specify which neighborhood the new data belongs to")
 
-    if(!is.null(cl <- attr(Terms, "dataClasses"))) .checkMFClasses(cl, mf)
-    X <- model.matrix(Terms, mf, contrasts.arg = object$contrasts)
+    if(!is.null(cl <- attr(Terms, "dataClasses"))) stats::.checkMFClasses(cl, mf)
+    X <- stats::model.matrix(Terms, mf, contrasts.arg = object$contrasts)
 
     stopifnot(
       ncol(X) == ncol(object$coefficients)
