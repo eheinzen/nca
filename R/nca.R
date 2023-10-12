@@ -4,7 +4,7 @@
 #' @param data An optional data.frame from which to get the variables in \code{formula}.
 #' @param subset An optional vector specifying the subset of rows to use.
 #' @param na.action The action to take when \code{NA}s are present.
-#' @param ... Other arguments passed to \code{model.matrix} or \code{nca.fit} or \code{loss}.
+#' @param ... Other arguments passed to \code{\link{model.matrix}} or \code{nca.fit} or \code{\link{optim}}.
 #' @param y The response vector whose loss is to be measured. This can be a factor
 #'   or character vector, for which classification will be performed, or a numeric,
 #'   for which regression will be performed.
@@ -24,7 +24,9 @@
 #' @param loss A vectorized function fed to \code{\link{outer}} for determining
 #'   the loss between two elements of \code{y}. It is assumed (but not checked)
 #'   that the loss is symmetric. For regression, this defaults to \code{\link{loss_sq_error}},
-#'   and for classification it defaults to \code{\link{loss_misclassification}}.
+#'   and for classification it defaults to \code{!=} (the misclassification loss).
+#'   A custom function should only have two arguments; for more than that, consider
+#'   a function factory, as in \code{\link{loss_tolerance}}.
 #' @param mode One of "classification" or "regression". If this argument is missing,
 #'   it is inferred based on the class of \code{y}.
 #' @param lambda A penalty parameter to penalize the transformation matrix back to 0. The penalty applied
@@ -123,7 +125,7 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
 
   if(is.null(loss) && (is.factor(y) || is.character(y) || (!missing(mode) && mode == "classification"))) {
     classification <- TRUE
-    loss <- loss_misclassification
+    loss <- `!=`
   } else if(is.null(loss)) {
     stopifnot(is.numeric(y))
     classification <- FALSE
@@ -148,7 +150,7 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
   idx <- split(seq_len(N), f = neighborhood, drop = TRUE)
   if(debug) cat("Doing yiyj...")
   ysplit <- split(y, f = neighborhood, drop = TRUE)
-  yiyj <- lapply(ysplit, function(yy) outer(yy, yy, FUN = loss, ...))
+  yiyj <- lapply(ysplit, function(yy) outer(yy, yy, FUN = loss))
   if(debug) cat("Done\n")
 
   diagg <- !missing(n_components) && identical(n_components, "diagonal")
@@ -191,14 +193,14 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     return(NULL)
   }
 
-  calculate_objective <- function(A) {
+  calculate_objective <- function(A, ...) {
     dim(A) <- dim(A.init)
     calculate_once(A)
     # stopifnot(env$A == A)
     do.call(sum, Map(env$pij, yiyj, f = function(pp, yy) sum(pp * yy)))/N + 0.5*lambda*sum(A^2) # since we're minimizing, we want to *add* the penalty
   }
 
-  calculate_gradient <- function(A) {
+  calculate_gradient <- function(A, ...) {
     dim(A) <- dim(A.init)
     calculate_once(A)
     # stopifnot(env$A == A)
@@ -224,7 +226,8 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     fn = calculate_objective,
     gr = calculate_gradient,
     method = optim_method,
-    control = optim_control
+    control = optim_control,
+    ...
   )
 
   if(out$convergence > 0) warning("The algorithm didn't converge")

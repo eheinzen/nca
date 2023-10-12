@@ -91,8 +91,8 @@ test_that("A warning is thrown if it doesn't converge", {
 
 
 test_that("custom loss function works", {
-  expect_message(nca(Species ~ ., data = iris, n_components = 1, loss = loss_misclassification), "You passed a custom")
-  expect_message(nca(Species ~ ., data = iris, n_components = 1, loss = loss_misclassification, mode = "classification"), NA)
+  expect_message(nca(Species ~ ., data = iris, n_components = 1, loss = `!=`), "You passed a custom")
+  expect_message(nca(Species ~ ., data = iris, n_components = 1, loss = `!=`, mode = "classification"), NA)
 })
 
 

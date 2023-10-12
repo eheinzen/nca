@@ -2,27 +2,29 @@
 % Please edit documentation in R/loss.R
 \name{nca_loss}
 \alias{nca_loss}
-\alias{loss_misclassification}
 \alias{loss_sq_error}
 \alias{loss_abs_error}
 \alias{loss_tolerance}
 \title{Loss functions}
 \usage{
-loss_misclassification(x, y, ...)
+loss_sq_error(x, y)
 
-loss_sq_error(x, y, ...)
+loss_abs_error(x, y)
 
-loss_abs_error(x, y, ...)
-
-loss_tolerance(x, y, tol, ...)
+loss_tolerance(tol)
 }
 \arguments{
 \item{x, y}{Vectors whose loss to calculate}
 
-\item{...}{Other arguments (not in use)}
-
 \item{tol}{A tolerance below which things are considered neighbors and above
 which is considered error}
+}
+\value{
+Most of these functions return the loss between the elements of \code{x} and \code{y}.
+  Note that the misclassification loss is simply \code{!=}.
+
+\code{loss_tolerance} is actually a function factory, which returns a loss
+  function.
 }
 \description{
 Loss functions

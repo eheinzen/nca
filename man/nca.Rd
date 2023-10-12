@@ -43,7 +43,7 @@ up computation}
 
 \item{na.action}{The action to take when \code{NA}s are present.}
 
-\item{...}{Other arguments passed to \code{model.matrix} or \code{nca.fit} or \code{loss}.}
+\item{...}{Other arguments passed to \code{\link{model.matrix}} or \code{nca.fit} or \code{\link{optim}}.}
 
 \item{y}{The response vector whose loss is to be measured. This can be a factor
 or character vector, for which classification will be performed, or a numeric,
@@ -63,7 +63,9 @@ numeric matrix from which to start the gradient descent, or a string denoting
 \item{loss}{A vectorized function fed to \code{\link{outer}} for determining
 the loss between two elements of \code{y}. It is assumed (but not checked)
 that the loss is symmetric. For regression, this defaults to \code{\link{loss_sq_error}},
-and for classification it defaults to \code{\link{loss_misclassification}}.}
+and for classification it defaults to \code{!=} (the misclassification loss).
+A custom function should only have two arguments; for more than that, consider
+a function factory, as in \code{\link{loss_tolerance}}.}
 
 \item{mode}{One of "classification" or "regression". If this argument is missing,
 it is inferred based on the class of \code{y}.}
@@ -103,7 +105,10 @@ nca.iris <- nca(Species ~ ., data = iris, n_components = 1)
 pred <- fitted(nca.iris)
 table(colnames(pred)[apply(pred, 1, which.max)] == iris$Species) # 2\% Leave-One-Out error
 
-nca.iris <- nca(Species ~ ., data = iris, n_components = 1)
+nca.iris.diag <- nca(Species ~ ., data = iris, n_components = "diagonal")
+pred <- fitted(nca.iris.diag)
+table(colnames(pred)[apply(pred, 1, which.max)] == iris$Species) # 3.3\% Leave-One-Out error
+
 }
 \references{
 J. Goldberger, G. Hinton, S. Roweis, R. Salakhutdinov.
