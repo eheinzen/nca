@@ -249,6 +249,11 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     classes <- NULL
   }
 
+  if(diagg) {
+    names(A) <- colnames(X)
+  } else {
+    colnames(A) <- colnames(X)
+  }
   structure(list(
     optim = out,
     coefficients = A,
