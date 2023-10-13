@@ -188,20 +188,20 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
     }
     if(verbose) cat("Recalculating\n")
     env$A <- A
-    env$AX <- lapply(Xsplit, function(xx) A %*% t(xx))
+    env$AX <- lapply(Xsplit, function(xx) if(diagg) A * t(xx) else A %*% t(xx))
     env$pij <- lapply(env$AX, calculate_pij)
     return(NULL)
   }
 
   calculate_objective <- function(A, ...) {
-    dim(A) <- dim(A.init)
+    if(!diagg) dim(A) <- dim(A.init)
     calculate_once(A)
     # stopifnot(env$A == A)
     do.call(sum, Map(env$pij, yiyj, f = function(pp, yy) sum(pp * yy)))/N + 0.5*lambda*sum(A^2) # since we're minimizing, we want to *add* the penalty
   }
 
   calculate_gradient <- function(A, ...) {
-    dim(A) <- dim(A.init)
+    if(!diagg) dim(A) <- dim(A.init)
     calculate_once(A)
     # stopifnot(env$A == A)
 
@@ -214,15 +214,13 @@ nca.fit <- function(y, X, n_components, init = c("pca", "identity"), loss = NULL
       stopifnot(all.equal(rowSums(W), rep.int(0, nrow(pp))))
       W2 <- W + t(W)
       diag(W2) <- -colSums(W)
-      ax %*% W2 %*% xx
+      if(diagg) colSums(t(ax) * (W2 %*% xx)) else ax %*% W2 %*% xx
     })
-    grad <- (2/N)*Reduce(`+`, tmp) + lambda*A
-    if(diagg) grad <- diag(diag(grad), k, k)
-    grad
+    (2/N)*Reduce(`+`, tmp) + lambda*A
   }
 
   out <- stats::optim(
-    par = A.init,
+    par = if(diagg) diag(A.init) else A.init,
     fn = calculate_objective,
     gr = calculate_gradient,
     method = optim_method,

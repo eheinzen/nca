@@ -1,10 +1,12 @@
-dat <- do.call(rbind, lapply(1:20, function(x) iris))
+dat <- do.call(rbind, lapply(1:5, function(x) cbind(iris, iris[names(iris) != "Species"],
+                                                    iris[names(iris) != "Species"], iris[names(iris) != "Species"],
+                                                    iris[names(iris) != "Species"], iris[names(iris) != "Species"])))
 y <- dat$Species
-X <- as.matrix(dat[names(iris) != "Species"])
+X <- as.matrix(dat[names(dat) != "Species"])
 microbenchmark::microbenchmark(
-  nca.fit(y = y, X = X, n_components = 3),
-  nca2.fit(y = y, X = X, n_components = 3),
-  times = 50L,
+  diag(nca.fit(y = y, X = X, n_components = "diagonal")$coefficients),
+  nca.fit2(y = y, X = X, n_components = "diagonal")$coefficients,
+  times = 10L,
   check = "equal"
 )
 
