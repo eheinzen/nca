@@ -3,7 +3,7 @@
 An R implementation of the Neighborhood Components Analysis,
 supporting both classification and regression problems.
 
-Based on the [original paper](http://www.cs.nyu.edu/~roweis/papers/ncanips.pdf),
+Based on the [original paper](https://cs.nyu.edu/~roweis/papers/ncanips.pdf),
 but modified in a few ways:
 
 1. The gradient computation is vectorized, as in Python's implementation in
