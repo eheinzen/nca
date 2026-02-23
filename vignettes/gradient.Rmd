@@ -17,7 +17,7 @@ $$f(A) = \sum_{i} \sum_{j \in C_{i}} p_{ij}$$
 
 where
 
-$$p_{ij} = \frac{\exp(-\Vert Ax_{i} - Ax_{j} \Vert)^2}{\sum_{k \ne i}\exp(-\Vert Ax_{i} - Ax_{j} \Vert)^2}$$
+$$p_{ij} = \frac{\exp(-\Vert Ax_{i} - Ax_{j} \Vert^2)}{\sum_{k \ne i}\exp(-\Vert Ax_{i} - Ax_{j} \Vert^2)}$$
 $$p_{ii} = 0$$
 
 Here we take $x_i$ as a column vector corresponding to the i-th row in the matrix $X$.
